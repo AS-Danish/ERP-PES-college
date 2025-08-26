@@ -7,7 +7,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../services/axiosConfig";
 import { useAuth } from "../context/authContext"; 
 
@@ -25,8 +25,10 @@ function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      if (user.role === "admin") navigate("/admin", { replace: true });
-      else navigate("/dashboard", { replace: true });
+      if (user.role === "admin") navigate("/admin/dashboard", { replace: true });
+      else if (user.role === "faculty") navigate("/faculty/dashboard", { replace: true });
+      else if (user.role === "hod") navigate("/hod/dashboard", { replace: true });
+      else navigate("/student/dashboard", { replace: true });
     }
   }, [user, navigate]);
 
@@ -103,9 +105,13 @@ function LoginPage() {
       setSubmitSuccess(true);
 
       if (role === "admin") {
-        navigate("/admin", { replace: true });
+        navigate("/admin/dashboard", { replace: true });
+      } else if (role === "faculty") {
+        navigate("/faculty/dashboard", { replace: true });
+      } else if (role === "hod") {
+        navigate("/hod/dashboard", { replace: true });
       } else {
-        navigate("/dashboard", { replace: true });
+        navigate("/student/dashboard", { replace: true });
       }
     } catch (err) {
       setErrors({
@@ -265,12 +271,12 @@ function LoginPage() {
                 <div className="text-center">
                   <p className="text-sm text-gray-600">
                     Don't have an account?{" "}
-                    <a
-                      href="#"
+                    <Link
+                      to="/register"
                       className="font-medium text-blue-600 hover:text-blue-500 hover:underline transition-colors"
                     >
                       Create one now
-                    </a>
+                    </Link>
                   </p>
                 </div>
               </form>
