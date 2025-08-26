@@ -17,7 +17,6 @@ function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    remember: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
@@ -54,20 +53,19 @@ function LoginPage() {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === "checkbox" ? checked : value;
+    const { name, value } = e.target;
 
     setFormData((prev) => ({
       ...prev,
-      [name]: newValue,
+      [name]: value,
     }));
 
     const newErrors = { ...errors };
 
     if (name === "email") {
-      if (!newValue) {
+      if (!value) {
         newErrors.email = "Email is required";
-      } else if (!validateEmail(newValue)) {
+      } else if (!validateEmail(value)) {
         newErrors.email = "Please enter a valid email address";
       } else {
         delete newErrors.email;
@@ -75,7 +73,7 @@ function LoginPage() {
     }
 
     if (name === "password") {
-      if (!newValue) {
+      if (!value) {
         newErrors.password = "Password is required";
       } else {
         delete newErrors.password;
@@ -241,32 +239,6 @@ function LoginPage() {
                       {errors.password}
                     </p>
                   )}
-                </div>
-
-                {/* Remember Me & Forgot Password */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <input
-                      id="remember"
-                      name="remember"
-                      type="checkbox"
-                      checked={formData.remember}
-                      onChange={handleInputChange}
-                      className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <label
-                      htmlFor="remember"
-                      className="ml-2 text-sm text-gray-700"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-                  <a
-                    href="#"
-                    className="text-sm font-medium text-blue-600 hover:text-blue-500 hover:underline transition-colors"
-                  >
-                    Forgot password?
-                  </a>
                 </div>
 
                 {/* Submit Button */}
