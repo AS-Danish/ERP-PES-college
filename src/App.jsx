@@ -10,6 +10,7 @@ import StudentDashboard from "./pages/studentDashboard";
 import FacultyDashboard from "./pages/facultyDashboard";
 import HodDashboard from "./pages/hodDashboard";
 import AdminDashboard from "./pages/adminDashboard";
+import AdmissionDashboard from "./pages/AdmissionDashboard";
 
 const Placeholder = ({ title }) => (
   <div className="space-y-2">
@@ -35,6 +36,7 @@ const router = createBrowserRouter([
     element: <PrivateRoute allowedRoles={["admin", "student", "faculty", "hod"]}><DashboardLayout /></PrivateRoute>,
     children: [
       { path: "/admin/dashboard", element: <AdminDashboard /> },
+      { path: "/admin/admissions/dashboard", element: <AdmissionDashboard/> },
       { path: "/admin/users", element: <Placeholder title="Manage Users" /> },
       { path: "/admin/departments", element: <Placeholder title="Departments" /> },
       { path: "/admin/programs", element: <Placeholder title="Programs" /> },

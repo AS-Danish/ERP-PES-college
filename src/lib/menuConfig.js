@@ -2,6 +2,13 @@ export const roleToMenu = {
   admin: [
     { label: "Admin Dashboard", path: "/admin/dashboard", icon: "LayoutDashboard" },
     {
+      label: "Admissions",
+      icon: "UserPlus",
+      children: [
+        { label: "Admission Dashboard", path: "/admin/admissions/dashboard", icon: "BarChart3" },
+      ],
+    },
+    {
       label: "Users & Access",
       icon: "Users",
       children: [
