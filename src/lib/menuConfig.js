@@ -6,6 +6,7 @@ export const roleToMenu = {
       icon: "UserPlus",
       children: [
         { label: "Admission Dashboard", path: "/admin/admissions/dashboard", icon: "BarChart3" },
+        { label: "Student Records", path: "/admin/students/records", icon: "FileUser" },
       ],
     },
     {
