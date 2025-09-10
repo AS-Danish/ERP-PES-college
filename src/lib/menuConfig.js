@@ -1,6 +1,8 @@
 export const roleToMenu = {
   admin: [
     { label: "Admin Dashboard", path: "/admin/dashboard", icon: "LayoutDashboard" },
+    { label: "Student Management", path: "/admin/students/manage", icon: "LayoutDashboard" },
+    { label: "Faculty Management", path: "/admin/faculty/manage", icon: "LayoutDashboard" },
     {
       label: "Admissions",
       icon: "UserPlus",

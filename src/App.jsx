@@ -12,6 +12,8 @@ import HodDashboard from "./pages/hodDashboard";
 import AdminDashboard from "./pages/adminDashboard";
 import AdmissionDashboard from "./pages/AdmissionDashboard";
 import StudentRecordsPage from "./pages/StudentRecordsPage";
+import StudentManagement from "./pages/studentManagement";
+import FacultyManagement from "./pages/facultyManagement";
 
 const Placeholder = ({ title }) => (
   <div className="space-y-2">
@@ -39,6 +41,8 @@ const router = createBrowserRouter([
       { path: "/admin/dashboard", element: <AdminDashboard /> },
       { path: "/admin/admissions/dashboard", element: <AdmissionDashboard/> },
       { path: "/admin/students/records", element: <StudentRecordsPage/> },
+      { path: "/admin/students/manage", element: <StudentManagement/> },
+      { path: "/admin/faculty/manage", element: <FacultyManagement/> },
       { path: "/admin/users", element: <Placeholder title="Manage Users" /> },
       { path: "/admin/departments", element: <Placeholder title="Departments" /> },
       { path: "/admin/programs", element: <Placeholder title="Programs" /> },
