@@ -20,14 +20,20 @@ let pool = null;
 async function getConnection() {
   if (!pool) {
     pool = mysql.createPool(dbConfig);
+    console.log('Database connection pool created.');
   }
   return pool;
 }
 
 async function query(sql, params) {
-  const connection = await getConnection();
-  const [rows] = await connection.promise().execute(sql, params);
-  return rows;
+  try {
+    const connection = await getConnection();
+    const [rows] = await connection.promise().execute(sql, params);
+    return rows;
+  } catch (err) {
+    console.error('DB Query Error:', err.message);
+    throw err;
+  }
 }
 
 async function closeConnection() {
