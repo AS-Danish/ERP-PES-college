@@ -104,6 +104,68 @@ export const roleToMenu = {
   ],
   faculty: [
     { label: "Dashboard", path: "/faculty/dashboard", icon: "LayoutDashboard" },
+    {
+      label: "My Classes",
+      icon: "Users",
+      children: [
+        { label: "Current Classes", path: "/faculty/classes/current", icon: "BookOpen" },
+        { label: "Class Schedule", path: "/faculty/classes/schedule", icon: "Calendar" },
+        { label: "Class Management", path: "/faculty/classes/manage", icon: "Settings" },
+      ],
+    },
+    {
+      label: "Attendance",
+      icon: "UserCheck",
+      children: [
+        { label: "Create Session", path: "/faculty/attendance/create-session", icon: "Plus" },
+        { label: "Mark Attendance", path: "/faculty/attendance/mark", icon: "CheckSquare" },
+        { label: "Bulk Upload", path: "/faculty/attendance/bulk-upload", icon: "Upload" },
+        { label: "Request Corrections", path: "/faculty/attendance/corrections", icon: "Edit" },
+        { label: "Attendance Reports", path: "/faculty/attendance/reports", icon: "BarChart3" },
+      ],
+    },
+    {
+      label: "Assignments",
+      icon: "FileText",
+      children: [
+        { label: "Create Assignment", path: "/faculty/assignments/create", icon: "Plus" },
+        { label: "Manage Assignments", path: "/faculty/assignments/manage", icon: "List" },
+        { label: "Submissions", path: "/faculty/assignments/submissions", icon: "Inbox" },
+        { label: "Evaluation", path: "/faculty/assignments/evaluation", icon: "CheckCircle" },
+        { label: "Study Materials", path: "/faculty/assignments/materials", icon: "BookOpen" },
+      ],
+    },
+    {
+      label: "Exams & Results",
+      icon: "ClipboardCheck",
+      children: [
+        { label: "Internal Marks", path: "/faculty/exams/internal-marks", icon: "Edit" },
+        { label: "Practical Exams", path: "/faculty/exams/practical", icon: "FlaskConical" },
+        { label: "Answer Scripts", path: "/faculty/exams/answer-scripts", icon: "FileImage" },
+        { label: "Final Marks", path: "/faculty/exams/final-marks", icon: "Award" },
+        { label: "Results Overview", path: "/faculty/exams/results", icon: "BarChart3" },
+      ],
+    },
+    {
+      label: "Student Interaction",
+      icon: "MessageSquare",
+      children: [
+        { label: "Student Messages", path: "/faculty/interaction/messages", icon: "Mail" },
+        { label: "Attendance Alerts", path: "/faculty/interaction/attendance-alerts", icon: "AlertTriangle" },
+        { label: "Performance Tracking", path: "/faculty/interaction/performance", icon: "TrendingUp" },
+        { label: "Student Feedback", path: "/faculty/interaction/feedback", icon: "MessageCircle" },
+      ],
+    },
+    {
+      label: "Reports",
+      icon: "BarChart2",
+      children: [
+        { label: "Class Performance", path: "/faculty/reports/class-performance", icon: "ChartSpline" },
+        { label: "Attendance Summary", path: "/faculty/reports/attendance-summary", icon: "PieChart" },
+        { label: "Assignment Reports", path: "/faculty/reports/assignments", icon: "FileBarChart" },
+        { label: "Export Data", path: "/faculty/reports/export", icon: "Download" },
+      ],
+    },
   ],
   hod: [
     { label: "Dashboard", path: "/hod/dashboard", icon: "LayoutDashboard" },

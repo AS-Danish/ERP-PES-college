@@ -15,6 +15,7 @@ import StudentRecordsPage from "./pages/StudentRecordsPage";
 import StudentManagement from "./pages/studentManagement";
 import FacultyManagement from "./pages/facultyManagement";
 import CourseManagement from "./pages/courseManagement";
+import FacultyCurrentClasses from "./pages/Faculty/currentClass";
 
 const Placeholder = ({ title }) => (
   <div className="space-y-2">
@@ -59,7 +60,13 @@ const router = createBrowserRouter([
       { path: "/admin/reports/analytics", element: <Placeholder title="Reports - Analytics" /> },
       { path: "/admin/reports/exports", element: <Placeholder title="Reports - Exports" /> },
       { path: "/student/dashboard", element: <StudentDashboard /> },
+
+
       { path: "/faculty/dashboard", element: <FacultyDashboard /> },
+      { path: "/faculty/classes/current", element: <FacultyCurrentClasses /> },
+      { path: "/faculty/classes/schedule", element: <FacultyCurrentClasses /> },
+
+
       { path: "/hod/dashboard", element: <HodDashboard /> },
     ],
   },
