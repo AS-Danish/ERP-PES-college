@@ -3,6 +3,7 @@ export const roleToMenu = {
     { label: "Admin Dashboard", path: "/admin/dashboard", icon: "LayoutDashboard" },
     { label: "Student Management", path: "/admin/students/manage", icon: "LayoutDashboard" },
     { label: "Faculty Management", path: "/admin/faculty/manage", icon: "LayoutDashboard" },
+    { label: "Branch Management", path: "/admin/branch/manage", icon: "LayoutDashboard" },
     { label: "Course Management", path: "/admin/course/manage", icon: "LayoutDashboard" },
     {
       label: "Admissions",

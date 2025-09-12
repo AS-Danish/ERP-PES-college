@@ -16,6 +16,7 @@ import StudentManagement from "./pages/studentManagement";
 import FacultyManagement from "./pages/facultyManagement";
 import CourseManagement from "./pages/courseManagement";
 import FacultyCurrentClasses from "./pages/Faculty/currentClass";
+import BranchManagement from "./pages/branchManagement";
 
 const Placeholder = ({ title }) => (
   <div className="space-y-2">
@@ -45,6 +46,7 @@ const router = createBrowserRouter([
       { path: "/admin/students/records", element: <StudentRecordsPage/> },
       { path: "/admin/students/manage", element: <StudentManagement/> },
       { path: "/admin/faculty/manage", element: <FacultyManagement/> },
+      { path: "/admin/branch/manage", element: <BranchManagement/> },
       { path: "/admin/course/manage", element: <CourseManagement/> },
       { path: "/admin/users", element: <Placeholder title="Manage Users" /> },
       { path: "/admin/departments", element: <Placeholder title="Departments" /> },
