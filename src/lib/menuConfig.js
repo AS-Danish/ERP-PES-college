@@ -5,6 +5,7 @@ export const roleToMenu = {
     { label: "Faculty Management", path: "/admin/faculty/manage", icon: "LayoutDashboard" },
     { label: "Branch Management", path: "/admin/branch/manage", icon: "LayoutDashboard" },
     { label: "Course Management", path: "/admin/course/manage", icon: "LayoutDashboard" },
+    { label: "Class Assign Management", path: "/admin/class/assign/manage", icon: "LayoutDashboard" },
     {
       label: "Admissions",
       icon: "UserPlus",

@@ -9,14 +9,15 @@ import DashboardLayout from "./layout/DashboardLayout";
 import StudentDashboard from "./pages/studentDashboard";
 import FacultyDashboard from "./pages/facultyDashboard";
 import HodDashboard from "./pages/hodDashboard";
-import AdminDashboard from "./pages/adminDashboard";
-import AdmissionDashboard from "./pages/AdmissionDashboard";
-import StudentRecordsPage from "./pages/StudentRecordsPage";
-import StudentManagement from "./pages/studentManagement";
-import FacultyManagement from "./pages/facultyManagement";
-import CourseManagement from "./pages/courseManagement";
+import AdminDashboard from "./pages/Admin/adminDashboard";
+import AdmissionDashboard from "./pages/Admin/AdmissionDashboard";
+import StudentRecordsPage from "./pages/Admin/StudentRecordsPage";
+import StudentManagement from "./pages/Admin/studentManagement";
+import FacultyManagement from "./pages/Admin/facultyManagement";
+import CourseManagement from "./pages/Admin/courseManagement";
 import FacultyCurrentClasses from "./pages/Faculty/currentClass";
-import BranchManagement from "./pages/branchManagement";
+import BranchManagement from "./pages/Admin/branchManagement";
+import ClassAssignmentManagement from "./pages/Admin/ClassAssignManagement";
 
 const Placeholder = ({ title }) => (
   <div className="space-y-2">
@@ -48,6 +49,7 @@ const router = createBrowserRouter([
       { path: "/admin/faculty/manage", element: <FacultyManagement/> },
       { path: "/admin/branch/manage", element: <BranchManagement/> },
       { path: "/admin/course/manage", element: <CourseManagement/> },
+      { path: "/admin/class/assign/manage", element: <ClassAssignmentManagement/> },
       { path: "/admin/users", element: <Placeholder title="Manage Users" /> },
       { path: "/admin/departments", element: <Placeholder title="Departments" /> },
       { path: "/admin/programs", element: <Placeholder title="Programs" /> },
