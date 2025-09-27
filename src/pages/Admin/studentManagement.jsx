@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -16,176 +16,251 @@ import {
   Phone,
   MoreVertical,
   Calendar,
-  BookOpen
+  BookOpen,
+  Loader2
 } from 'lucide-react';
+import { studentService, authService } from '../../services/studentService';
 
 export default function StudentManagement() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProgram, setSelectedProgram] = useState('All');
-  const [selectedYear, setSelectedYear] = useState('All');
-  const [selectedStatus, setSelectedStatus] = useState('All');
+  const [selectedBranch, setSelectedBranch] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [showAddModal, setShowAddModal] = useState(false);
-
-  // Sample student data
-  const students = [
-    {
-      id: 'ST001',
-      name: 'Rahul Sharma',
-      email: 'rahul.sharma@example.com',
-      phone: '+91 9876543210',
-      program: 'B.Tech Computer Science',
-      year: '3rd Year',
-      semester: '6th Semester',
-      rollNumber: 'CS2021001',
-      admissionYear: '2021',
-      status: 'Active',
-      cgpa: 8.5,
-      attendance: 85,
-      feeStatus: 'Paid',
-      admissionType: 'CAP 1',
-      category: 'General',
-      dateOfBirth: '2002-05-15',
-      guardian: 'Suresh Sharma',
-      address: 'Mumbai, Maharashtra',
-      profileImage: null
-    },
-    {
-      id: 'ST002',
-      name: 'Priya Patel',
-      email: 'priya.patel@example.com',
-      phone: '+91 9876543211',
-      program: 'B.Tech Electronics & Communication',
-      year: '2nd Year',
-      semester: '4th Semester',
-      rollNumber: 'EC2022015',
-      admissionYear: '2022',
-      status: 'Active',
-      cgpa: 9.2,
-      attendance: 92,
-      feeStatus: 'Paid',
-      admissionType: 'CAP 2',
-      category: 'OBC',
-      dateOfBirth: '2003-08-22',
-      guardian: 'Ramesh Patel',
-      address: 'Pune, Maharashtra',
-      profileImage: null
-    },
-    {
-      id: 'ST003',
-      name: 'Amit Kumar',
-      email: 'amit.kumar@example.com',
-      phone: '+91 9876543212',
-      program: 'M.Tech Signal Processing',
-      year: '1st Year',
-      semester: '2nd Semester',
-      rollNumber: 'MT2023008',
-      admissionYear: '2023',
-      status: 'Active',
-      cgpa: 7.8,
-      attendance: 78,
-      feeStatus: 'Pending',
-      admissionType: 'Institute Level',
-      category: 'SC',
-      dateOfBirth: '2000-12-10',
-      guardian: 'Raj Kumar',
-      address: 'Aurangabad, Maharashtra',
-      profileImage: null
-    },
-    {
-      id: 'ST004',
-      name: 'Sneha Desai',
-      email: 'sneha.desai@example.com',
-      phone: '+91 9876543213',
-      program: 'B.Tech Computer Science',
-      year: '4th Year',
-      semester: '8th Semester',
-      rollNumber: 'CS2020022',
-      admissionYear: '2020',
-      status: 'Active',
-      cgpa: 8.9,
-      attendance: 88,
-      feeStatus: 'Paid',
-      admissionType: 'CAP 1',
-      category: 'General',
-      dateOfBirth: '2001-03-18',
-      guardian: 'Mahesh Desai',
-      address: 'Nashik, Maharashtra',
-      profileImage: null
-    },
-    {
-      id: 'ST005',
-      name: 'Arjun Singh',
-      email: 'arjun.singh@example.com',
-      phone: '+91 9876543214',
-      program: 'B.Tech Electronics & Communication',
-      year: '1st Year',
-      semester: '2nd Semester',
-      rollNumber: 'EC2023035',
-      admissionYear: '2023',
-      status: 'Inactive',
-      cgpa: 6.5,
-      attendance: 65,
-      feeStatus: 'Overdue',
-      admissionType: 'CAP 3',
-      category: 'ST',
-      dateOfBirth: '2004-01-25',
-      guardian: 'Vikram Singh',
-      address: 'Nagpur, Maharashtra',
-      profileImage: null
-    }
-  ];
-
-  const programs = ['All', 'B.Tech Computer Science', 'B.Tech Electronics & Communication', 'M.Tech Signal Processing'];
-  const years = ['All', '1st Year', '2nd Year', '3rd Year', '4th Year'];
-  const statuses = ['All', 'Active', 'Inactive', 'Graduated', 'Suspended'];
-  const feeStatuses = ['All', 'Paid', 'Pending', 'Overdue'];
-
-  // Filter students based on search and filters
-  const filteredStudents = students.filter(student => {
-    const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.rollNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesProgram = selectedProgram === 'All' || student.program === selectedProgram;
-    const matchesYear = selectedYear === 'All' || student.year === selectedYear;
-    const matchesStatus = selectedStatus === 'All' || student.status === selectedStatus;
-    
-    return matchesSearch && matchesProgram && matchesYear && matchesStatus;
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  // Data states
+  const [students, setStudents] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [pagination, setPagination] = useState({});
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    activeStudents: 0,
+    pendingFees: 0,
+    averageCGPA: 0
   });
 
-  // Sort students
-  const sortedStudents = [...filteredStudents].sort((a, b) => {
-    let aValue = a[sortBy];
-    let bValue = b[sortBy];
-    
-    if (typeof aValue === 'string') {
-      aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
-    }
-    
-    if (sortOrder === 'asc') {
-      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-    } else {
-      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
-    }
+  // Form states for add/edit
+  const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    password: '',
+    phone: '',
+    date_of_birth: '',
+    gender: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: '',
+    father_name: '',
+    mother_name: '',
+    father_phone: '',
+    mother_phone: '',
+    emergency_contact: '',
+    blood_group: '',
+    admission_date: '',
+    current_semester: 1,
+    academic_year: '',
+    branch: '',
+    course: ''
   });
 
-  // Pagination
-  const totalPages = Math.ceil(sortedStudents.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentStudents = sortedStudents.slice(startIndex, endIndex);
+  // Load initial data
+  useEffect(() => {
+    verifyTokenAndLoadData();
+  }, [currentPage, itemsPerPage, searchTerm, selectedBranch, selectedStatus]);
 
-  // Calculate summary statistics
-  const totalStudents = students.length;
-  const activeStudents = students.filter(s => s.status === 'Active').length;
-  const pendingFees = students.filter(s => s.feeStatus === 'Pending' || s.feeStatus === 'Overdue').length;
-  const averageCGPA = (students.reduce((sum, s) => sum + s.cgpa, 0) / students.length).toFixed(2);
+  const verifyTokenAndLoadData = async () => {
+    try {
+      // First verify the token
+      await authService.verifyToken();
+      // If token is valid, load the data
+      await loadStudents();
+      await loadBranches();
+      await loadCourses();
+    } catch (err) {
+      console.error('Token verification failed:', err);
+      
+      // If it's a database error, try to initialize the database
+      if (err.message && err.message.includes('Error fetching students')) {
+        try {
+          console.log('Attempting to initialize database...');
+          await studentService.initDatabase();
+          console.log('Database initialized successfully');
+          // Try loading data again
+          await loadStudents();
+          await loadBranches();
+          await loadCourses();
+          return;
+        } catch (initError) {
+          console.error('Database initialization failed:', initError);
+          setError('Database initialization failed. Please contact administrator.');
+          return;
+        }
+      }
+      
+      setError('Authentication failed. Please log in again.');
+      // Optionally redirect to login
+      // window.location.href = '/';
+    }
+  };
+
+  const loadStudents = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchTerm,
+        branch: selectedBranch,
+        status: selectedStatus
+      };
+      const response = await studentService.getAllStudents(params);
+      setStudents(response.students);
+      setPagination(response.pagination);
+      
+      // Calculate stats
+      const totalStudents = response.pagination.totalStudents;
+      const activeStudents = response.students.filter(s => s.status === 'active').length;
+      const pendingFees = response.students.filter(s => s.feeStatus === 'pending' || s.feeStatus === 'overdue').length;
+      setStats({ totalStudents, activeStudents, pendingFees, averageCGPA: 0 });
+    } catch (err) {
+      setError(err.message || 'Failed to load students');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadBranches = async () => {
+    try {
+      const response = await studentService.getBranches();
+      setBranches(response.branches);
+    } catch (err) {
+      console.error('Failed to load branches:', err);
+    }
+  };
+
+  const loadCourses = async () => {
+    try {
+      const response = await studentService.getCourses();
+      setCourses(response.courses);
+    } catch (err) {
+      console.error('Failed to load courses:', err);
+    }
+  };
+
+  const handleAddStudent = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await studentService.createStudent(formData);
+      setShowAddModal(false);
+      resetForm();
+      loadStudents();
+    } catch (err) {
+      setError(err.message || 'Failed to create student');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditStudent = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await studentService.updateStudent(selectedStudent.id, formData);
+      setShowEditModal(false);
+      resetForm();
+      loadStudents();
+    } catch (err) {
+      setError(err.message || 'Failed to update student');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteStudent = async (id) => {
+    if (window.confirm('Are you sure you want to delete this student?')) {
+      try {
+        setLoading(true);
+        await studentService.deleteStudent(id);
+        loadStudents();
+      } catch (err) {
+        setError(err.message || 'Failed to delete student');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      first_name: '',
+      last_name: '',
+      email: '',
+      password: '',
+      phone: '',
+      date_of_birth: '',
+      gender: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      father_name: '',
+      mother_name: '',
+      father_phone: '',
+      mother_phone: '',
+      emergency_contact: '',
+      blood_group: '',
+      admission_date: '',
+      current_semester: 1,
+      academic_year: '',
+      branch: '',
+      course: ''
+    });
+  };
+
+  const openEditModal = (student) => {
+    setSelectedStudent(student);
+    setFormData({
+      first_name: student.first_name,
+      last_name: student.last_name,
+      email: student.email,
+      phone: student.phone,
+      date_of_birth: student.date_of_birth,
+      gender: student.gender,
+      address: student.address,
+      city: student.city,
+      state: student.state,
+      pincode: student.pincode,
+      father_name: student.father_name,
+      mother_name: student.mother_name,
+      father_phone: student.father_phone,
+      mother_phone: student.mother_phone,
+      emergency_contact: student.emergency_contact,
+      blood_group: student.blood_group,
+      admission_date: student.admission_date,
+      current_semester: student.current_semester,
+      academic_year: student.academic_year,
+      branch: student.branch,
+      course: student.course
+    });
+    setShowEditModal(true);
+  };
+
+  const openViewModal = (student) => {
+    setSelectedStudent(student);
+    setShowViewModal(true);
+  };
 
   const handleSelectStudent = (studentId) => {
     setSelectedStudents(prev => 
@@ -196,31 +271,42 @@ export default function StudentManagement() {
   };
 
   const handleSelectAll = () => {
-    if (selectedStudents.length === currentStudents.length) {
+    if (selectedStudents.length === students.length) {
       setSelectedStudents([]);
     } else {
-      setSelectedStudents(currentStudents.map(s => s.id));
+      setSelectedStudents(students.map(s => s.id));
     }
   };
 
   const getStatusBadge = (status) => {
     const colors = {
-      'Active': 'bg-green-100 text-green-800',
-      'Inactive': 'bg-red-100 text-red-800',
-      'Graduated': 'bg-blue-100 text-blue-800',
-      'Suspended': 'bg-yellow-100 text-yellow-800'
+      'active': 'bg-green-100 text-green-800',
+      'inactive': 'bg-red-100 text-red-800',
+      'graduated': 'bg-blue-100 text-blue-800',
+      'suspended': 'bg-yellow-100 text-yellow-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
   const getFeeStatusBadge = (status) => {
     const colors = {
-      'Paid': 'bg-green-100 text-green-800',
-      'Pending': 'bg-yellow-100 text-yellow-800',
-      'Overdue': 'bg-red-100 text-red-800'
+      'paid': 'bg-green-100 text-green-800',
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'overdue': 'bg-red-100 text-red-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
+
+  if (loading && students.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Loading students...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -252,6 +338,7 @@ export default function StudentManagement() {
           </div>
         </div>
 
+
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -261,7 +348,7 @@ export default function StudentManagement() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Students</p>
-                <p className="text-2xl font-bold text-gray-900">{totalStudents}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalStudents}</p>
               </div>
             </div>
           </div>
@@ -273,7 +360,7 @@ export default function StudentManagement() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Active Students</p>
-                <p className="text-2xl font-bold text-gray-900">{activeStudents}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeStudents}</p>
               </div>
             </div>
           </div>
@@ -285,7 +372,7 @@ export default function StudentManagement() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Pending Fees</p>
-                <p className="text-2xl font-bold text-gray-900">{pendingFees}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.pendingFees}</p>
               </div>
             </div>
           </div>
@@ -297,7 +384,7 @@ export default function StudentManagement() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Average CGPA</p>
-                <p className="text-2xl font-bold text-gray-900">{averageCGPA}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.averageCGPA}</p>
               </div>
             </div>
           </div>
@@ -349,27 +436,15 @@ export default function StudentManagement() {
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Program</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Branch</label>
                   <select
-                    value={selectedProgram}
-                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    value={selectedBranch}
+                    onChange={(e) => setSelectedBranch(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    {programs.map(program => (
-                      <option key={program} value={program}>{program}</option>
-                    ))}
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Year</label>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {years.map(year => (
-                      <option key={year} value={year}>{year}</option>
+                    <option value="">All Branches</option>
+                    {branches.map(branch => (
+                      <option key={branch.id} value={branch.name}>{branch.name}</option>
                     ))}
                   </select>
                 </div>
@@ -381,9 +456,11 @@ export default function StudentManagement() {
                     onChange={(e) => setSelectedStatus(e.target.value)}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    {statuses.map(status => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                    <option value="graduated">Graduated</option>
+                    <option value="suspended">Suspended</option>
                   </select>
                 </div>
 
@@ -400,6 +477,20 @@ export default function StudentManagement() {
                     <option value={100}>100</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Actions</label>
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedBranch('');
+                      setSelectedStatus('');
+                    }}
+                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -414,7 +505,7 @@ export default function StudentManagement() {
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedStudents.length === currentStudents.length && currentStudents.length > 0}
+                      checked={selectedStudents.length === students.length && students.length > 0}
                       onChange={handleSelectAll}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -423,16 +514,13 @@ export default function StudentManagement() {
                     Student
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Program & Year
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Academic Info
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                    Contact
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Fee Status
+                    Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -440,7 +528,21 @@ export default function StudentManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {currentStudents.map((student) => (
+                {loading ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center">
+                      <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
+                      <p className="text-gray-600">Loading students...</p>
+                    </td>
+                  </tr>
+                ) : students.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center">
+                      <p className="text-gray-600">No students found</p>
+                    </td>
+                  </tr>
+                ) : (
+                  students.map((student) => (
                   <tr key={student.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
@@ -455,65 +557,82 @@ export default function StudentManagement() {
                         <div className="h-10 w-10 flex-shrink-0">
                           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                             <span className="text-blue-700 font-medium text-sm">
-                              {student.name.split(' ').map(n => n[0]).join('')}
+                                {student.first_name[0]}{student.last_name[0]}
                             </span>
                           </div>
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{student.name}</div>
-                          <div className="text-sm text-gray-500">{student.rollNumber}</div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {student.first_name} {student.last_name}
+                            </div>
+                            <div className="text-sm text-gray-500">{student.student_id}</div>
                           <div className="text-xs text-gray-400">{student.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{student.program}</div>
-                      <div className="text-sm text-gray-500">{student.year} • {student.semester}</div>
-                      <div className="text-xs text-gray-400">Admitted: {student.admissionYear}</div>
+                        <div className="text-sm text-gray-900">{student.course}</div>
+                        <div className="text-sm text-gray-500">{student.branch}</div>
+                        <div className="text-xs text-gray-400">Sem: {student.current_semester}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">CGPA: {student.cgpa}</div>
-                      <div className="text-sm text-gray-500">Attendance: {student.attendance}%</div>
-                      <div className="text-xs text-gray-400">{student.admissionType}</div>
+                        <div className="text-sm text-gray-900">{student.phone}</div>
+                        <div className="text-sm text-gray-500">{student.father_phone}</div>
+                        <div className="text-xs text-gray-400">{student.city}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(student.status)}`}>
                         {student.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getFeeStatusBadge(student.feeStatus)}`}>
-                        {student.feeStatus}
-                      </span>
-                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-2">
-                        <button className="text-blue-600 hover:text-blue-900" title="View Details">
+                          <button 
+                            onClick={() => openViewModal(student)}
+                            className="text-blue-600 hover:text-blue-900" 
+                            title="View Details"
+                          >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900" title="Edit">
+                          <button 
+                            onClick={() => openEditModal(student)}
+                            className="text-gray-600 hover:text-gray-900" 
+                            title="Edit"
+                          >
                           <Edit className="w-4 h-4" />
                         </button>
-                        <button className="text-green-600 hover:text-green-900" title="Send Email">
+                          <button 
+                            onClick={() => window.open(`mailto:${student.email}`)}
+                            className="text-green-600 hover:text-green-900" 
+                            title="Send Email"
+                          >
                           <Mail className="w-4 h-4" />
                         </button>
-                        <button className="text-blue-600 hover:text-blue-900" title="Call">
+                          <button 
+                            onClick={() => window.open(`tel:${student.phone}`)}
+                            className="text-blue-600 hover:text-blue-900" 
+                            title="Call"
+                          >
                           <Phone className="w-4 h-4" />
                         </button>
-                        <div className="relative">
-                          <button className="text-gray-400 hover:text-gray-600" title="More Options">
-                            <MoreVertical className="w-4 h-4" />
+                          <button 
+                            onClick={() => handleDeleteStudent(student.id)}
+                            className="text-red-600 hover:text-red-900" 
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
-                        </div>
                       </div>
                     </td>
                   </tr>
-                ))}
+                  ))
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination */}
+          {pagination.totalPages > 1 && (
           <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
             <div className="flex-1 flex justify-between sm:hidden">
               <button
@@ -524,8 +643,8 @@ export default function StudentManagement() {
                 Previous
               </button>
               <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
+                  disabled={currentPage === pagination.totalPages}
                 className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next
@@ -534,9 +653,9 @@ export default function StudentManagement() {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                  <span className="font-medium">{Math.min(endIndex, sortedStudents.length)}</span> of{' '}
-                  <span className="font-medium">{sortedStudents.length}</span> results
+                    Showing <span className="font-medium">{((currentPage - 1) * itemsPerPage) + 1}</span> to{' '}
+                    <span className="font-medium">{Math.min(currentPage * itemsPerPage, pagination.totalStudents)}</span> of{' '}
+                    <span className="font-medium">{pagination.totalStudents}</span> results
                 </p>
               </div>
               <div>
@@ -549,14 +668,14 @@ export default function StudentManagement() {
                     Previous
                   </button>
                   
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
                     let pageNum;
-                    if (totalPages <= 5) {
+                      if (pagination.totalPages <= 5) {
                       pageNum = i + 1;
                     } else if (currentPage <= 3) {
                       pageNum = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNum = totalPages - 4 + i;
+                      } else if (currentPage >= pagination.totalPages - 2) {
+                        pageNum = pagination.totalPages - 4 + i;
                     } else {
                       pageNum = currentPage - 2 + i;
                     }
@@ -577,8 +696,8 @@ export default function StudentManagement() {
                   })}
                   
                   <button
-                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(Math.min(pagination.totalPages, currentPage + 1))}
+                      disabled={currentPage === pagination.totalPages}
                     className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
@@ -587,17 +706,21 @@ export default function StudentManagement() {
               </div>
             </div>
           </div>
+          )}
         </div>
 
         {/* Add Student Modal */}
         {showAddModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg font-medium text-gray-900">Add New Student</h3>
                   <button
-                    onClick={() => setShowAddModal(false)}
+                    onClick={() => {
+                      setShowAddModal(false);
+                      resetForm();
+                    }}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -608,68 +731,205 @@ export default function StudentManagement() {
               </div>
               
               <div className="p-6">
-                <form className="space-y-6">
+                <form onSubmit={handleAddStudent} className="space-y-6">
                   {/* Personal Information */}
                   <div>
                     <h4 className="text-md font-medium text-gray-900 mb-4">Personal Information</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
                         <input
                           type="text"
+                          value={formData.first_name}
+                          onChange={(e) => setFormData({...formData, first_name: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter full name"
+                          placeholder="Enter first name"
+                          required
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth *</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
                         <input
-                          type="date"
+                          type="text"
+                          value={formData.last_name}
+                          onChange={(e) => setFormData({...formData, last_name: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter last name"
+                          required
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
                         <input
                           type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="student@example.com"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Password *</label>
+                        <input
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) => setFormData({...formData, password: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter password"
+                          required
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
                         <input
                           type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="+91 9876543210"
+                          required
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                        <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                          <option value="General">General</option>
-                          <option value="OBC">OBC</option>
-                          <option value="SC">SC</option>
-                          <option value="ST">ST</option>
-                          <option value="EWS">EWS</option>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                        <input
+                          type="date"
+                          value={formData.date_of_birth}
+                          onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                        <select 
+                          value={formData.gender}
+                          onChange={(e) => setFormData({...formData, gender: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select Gender</option>
+                          <option value="male">Male</option>
+                          <option value="female">Female</option>
+                          <option value="other">Other</option>
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Guardian Name</label>
-                        <input
-                          type="text"
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Blood Group</label>
+                        <select 
+                          value={formData.blood_group}
+                          onChange={(e) => setFormData({...formData, blood_group: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter guardian name"
-                        />
+                        >
+                          <option value="">Select Blood Group</option>
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                        </select>
                       </div>
                     </div>
                     <div className="mt-4">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
                       <textarea
                         rows={3}
+                        value={formData.address}
+                        onChange={(e) => setFormData({...formData, address: e.target.value})}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter complete address"
                       ></textarea>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                        <input
+                          type="text"
+                          value={formData.city}
+                          onChange={(e) => setFormData({...formData, city: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter city"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                        <input
+                          type="text"
+                          value={formData.state}
+                          onChange={(e) => setFormData({...formData, state: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter state"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Pincode</label>
+                        <input
+                          type="text"
+                          value={formData.pincode}
+                          onChange={(e) => setFormData({...formData, pincode: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter pincode"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Family Information */}
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Family Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Father's Name</label>
+                        <input
+                          type="text"
+                          value={formData.father_name}
+                          onChange={(e) => setFormData({...formData, father_name: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter father's name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Mother's Name</label>
+                        <input
+                          type="text"
+                          value={formData.mother_name}
+                          onChange={(e) => setFormData({...formData, mother_name: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter mother's name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Father's Phone</label>
+                        <input
+                          type="tel"
+                          value={formData.father_phone}
+                          onChange={(e) => setFormData({...formData, father_phone: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter father's phone"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Mother's Phone</label>
+                        <input
+                          type="tel"
+                          value={formData.mother_phone}
+                          onChange={(e) => setFormData({...formData, mother_phone: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter mother's phone"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Emergency Contact</label>
+                        <input
+                          type="tel"
+                          value={formData.emergency_contact}
+                          onChange={(e) => setFormData({...formData, emergency_contact: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter emergency contact"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -678,39 +938,62 @@ export default function StudentManagement() {
                     <h4 className="text-md font-medium text-gray-900 mb-4">Academic Information</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Program *</label>
-                        <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                          <option value="">Select Program</option>
-                          <option value="B.Tech Computer Science">B.Tech Computer Science</option>
-                          <option value="B.Tech Electronics & Communication">B.Tech Electronics & Communication</option>
-                          <option value="M.Tech Signal Processing">M.Tech Signal Processing</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Admission Year *</label>
-                        <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                          <option value="2024">2024</option>
-                          <option value="2023">2023</option>
-                          <option value="2022">2022</option>
-                          <option value="2021">2021</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Roll Number *</label>
-                        <input
-                          type="text"
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Course *</label>
+                        <select 
+                          value={formData.course}
+                          onChange={(e) => setFormData({...formData, course: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="CS2024001"
+                          required
+                        >
+                          <option value="">Select Course</option>
+                          {courses.map(course => (
+                            <option key={course.id} value={course.name}>{course.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Branch *</label>
+                        <select 
+                          value={formData.branch}
+                          onChange={(e) => setFormData({...formData, branch: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        >
+                          <option value="">Select Branch</option>
+                          {branches.map(branch => (
+                            <option key={branch.id} value={branch.name}>{branch.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Admission Date</label>
+                        <input
+                          type="date"
+                          value={formData.admission_date}
+                          onChange={(e) => setFormData({...formData, admission_date: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Admission Type</label>
-                        <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-                          <option value="CAP 1">CAP 1</option>
-                          <option value="CAP 2">CAP 2</option>
-                          <option value="CAP 3">CAP 3</option>
-                          <option value="Institute Level">Institute Level</option>
-                          <option value="Against CAP">Against CAP</option>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Academic Year</label>
+                        <input
+                          type="text"
+                          value={formData.academic_year}
+                          onChange={(e) => setFormData({...formData, academic_year: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="2024-25"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Current Semester</label>
+                        <select 
+                          value={formData.current_semester}
+                          onChange={(e) => setFormData({...formData, current_semester: parseInt(e.target.value)})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {[1,2,3,4,5,6,7,8].map(sem => (
+                            <option key={sem} value={sem}>{sem}</option>
+                          ))}
                         </select>
                       </div>
                     </div>
@@ -719,20 +1002,245 @@ export default function StudentManagement() {
                   <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                       type="button"
-                      onClick={() => setShowAddModal(false)}
+                      onClick={() => {
+                        setShowAddModal(false);
+                        resetForm();
+                      }}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                      disabled={loading}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
+                      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
                       Add Student
                     </button>
                   </div>
                 </form>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Student Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-900">Edit Student</h3>
+                  <button
+                    onClick={() => {
+                      setShowEditModal(false);
+                      resetForm();
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <form onSubmit={handleEditStudent} className="space-y-6">
+                  {/* Same form fields as Add Modal but with edit functionality */}
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Personal Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
+                        <input
+                          type="text"
+                          value={formData.first_name}
+                          onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
+                        <input
+                          type="text"
+                          value={formData.last_name}
+                          onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
+                        <input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowEditModal(false);
+                        resetForm();
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Update Student
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Student Modal */}
+        {showViewModal && selectedStudent && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-900">Student Details</h3>
+                  <button
+                    onClick={() => setShowViewModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Personal Information</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Name:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.first_name} {selectedStudent.last_name}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Student ID:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.student_id}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Email:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.email}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Phone:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.phone}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Date of Birth:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.date_of_birth}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Gender:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.gender}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Academic Information</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Course:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.course}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Branch:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.branch}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Current Semester:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.current_semester}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Academic Year:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.academic_year}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Admission Date:</span>
+                        <p className="text-sm text-gray-900">{selectedStudent.admission_date}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-500">Status:</span>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(selectedStudent.status)}`}>
+                          {selectedStudent.status}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => {
+                        setShowViewModal(false);
+                        openEditModal(selectedStudent);
+                      }}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                    >
+                      Edit Student
+                    </button>
+                    <button
+                      onClick={() => setShowViewModal(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
+            <div className="flex items-center">
+              <span className="block sm:inline">{error}</span>
+              <button
+                onClick={() => setError(null)}
+                className="ml-4 text-red-500 hover:text-red-700"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         )}

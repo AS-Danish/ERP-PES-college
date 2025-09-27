@@ -20,7 +20,7 @@ exports.login = async (req, res) => {
     if (!match) return res.status(401).json({ message: 'Invalid credentials' });
 
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: user.id, email: user.email, role: user.role },
       JWT_SECRET,
       { expiresIn: '9d' }
     );
@@ -66,5 +66,38 @@ exports.register = async (req, res) => {
     res.status(201).json({ message: 'Registration successful', token });
   } catch (err) {
     res.status(500).json({ message: 'Error registering user', error: err.message });
+  }
+};
+
+// GET /api/verify-token
+exports.verifyToken = async (req, res) => {
+  try {
+    // This endpoint is protected by auth middleware, so if we reach here, token is valid
+    res.json({ 
+      message: 'Token is valid', 
+      user: req.user,
+      role: req.user.role 
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error verifying token', error: err.message });
+  }
+};
+
+// GET /api/debug-token (for debugging - not protected)
+exports.debugToken = async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.split(' ')[1] : null;
+    
+    res.json({
+      message: 'Debug token info',
+      hasAuthHeader: !!authHeader,
+      hasToken: !!token,
+      tokenLength: token ? token.length : 0,
+      tokenStart: token ? token.substring(0, 20) + '...' : null,
+      jwtSecret: process.env.JWT_SECRET || 'your_jwt_secret'
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error debugging token', error: err.message });
   }
 };

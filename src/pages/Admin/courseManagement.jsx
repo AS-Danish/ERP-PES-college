@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -20,168 +20,247 @@ import {
   Settings,
   FileText,
   Calendar,
-  CheckCircle
+  CheckCircle,
+  AlertCircle,
+  Loader,
+  X
 } from 'lucide-react';
+import { courseService } from '../../services/courseService';
+
+// Mock API service - replace with your actual API service
+/*const courseService = {
+  getAllCourses: async (params = {}) => {
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const mockResponse = {
+      courses: [
+        {
+          id: 1,
+          name: 'Data Structures and Algorithms',
+          code: 'CSE101',
+          department: 'Computer Science & Engineering',
+          semester: '3rd Semester',
+          credits: 4,
+          theory_hours: 3,
+          practical_hours: 2,
+          faculty: 'Dr. Rajesh Kumar',
+          description: 'Fundamental data structures and algorithms for problem solving',
+          prerequisites: 'Programming Fundamentals',
+          status: 'Active',
+          syllabus_status: 'Updated',
+          created_at: '2024-01-15T10:00:00Z',
+          updated_at: '2024-09-01T10:00:00Z',
+          enrolled_students: 65,
+          courseOutcomes: [
+            { id: 1, outcome_number: 1, description: 'Analyze the performance of algorithms' },
+            { id: 2, outcome_number: 2, description: 'Implement various data structures' },
+            { id: 3, outcome_number: 3, description: 'Design efficient algorithms for problem solving' },
+            { id: 4, outcome_number: 4, description: 'Apply appropriate data structures for specific problems' }
+          ]
+        },
+        {
+          id: 2,
+          name: 'Digital Signal Processing',
+          code: 'ECE201',
+          department: 'Electronics & Communication',
+          semester: '5th Semester',
+          credits: 4,
+          theory_hours: 3,
+          practical_hours: 2,
+          faculty: 'Dr. Priya Sharma',
+          description: 'Analysis and design of digital signal processing systems',
+          prerequisites: 'Signals and Systems',
+          status: 'Active',
+          syllabus_status: 'Updated',
+          created_at: '2024-01-20T10:00:00Z',
+          updated_at: '2024-08-15T10:00:00Z',
+          enrolled_students: 58
+        },
+        {
+          id: 3,
+          name: 'Thermodynamics',
+          code: 'ME301',
+          department: 'Mechanical Engineering',
+          semester: '4th Semester',
+          credits: 3,
+          theory_hours: 3,
+          practical_hours: 0,
+          faculty: 'Prof. Amit Patel',
+          description: 'Laws of thermodynamics and their applications',
+          prerequisites: 'Physics, Mathematics',
+          status: 'Active',
+          syllabus_status: 'Review Pending',
+          created_at: '2024-01-10T10:00:00Z',
+          updated_at: '2024-07-20T10:00:00Z',
+          enrolled_students: 72
+        },
+        {
+          id: 4,
+          name: 'Machine Learning',
+          code: 'CSE401',
+          department: 'Computer Science & Engineering',
+          semester: '7th Semester',
+          credits: 4,
+          theory_hours: 3,
+          practical_hours: 2,
+          faculty: 'Dr. Sneha Desai',
+          description: 'Introduction to machine learning algorithms and applications',
+          prerequisites: 'Data Structures, Statistics',
+          status: 'Active',
+          syllabus_status: 'Updated',
+          created_at: '2024-02-01T10:00:00Z',
+          updated_at: '2024-09-05T10:00:00Z',
+          enrolled_students: 45
+        },
+        {
+          id: 5,
+          name: 'Structural Analysis',
+          code: 'CE501',
+          department: 'Civil Engineering',
+          semester: '6th Semester',
+          credits: 4,
+          theory_hours: 3,
+          practical_hours: 2,
+          faculty: 'Prof. Arjun Singh',
+          description: 'Analysis of determinate and indeterminate structures',
+          prerequisites: 'Engineering Mechanics',
+          status: 'Inactive',
+          syllabus_status: 'Outdated',
+          created_at: '2024-01-05T10:00:00Z',
+          updated_at: '2024-06-10T10:00:00Z',
+          enrolled_students: 38
+        }
+      ],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalCourses: 5,
+        limit: 10
+      }
+    };
+    
+    return mockResponse;
+  },
+
+  getDepartments: async () => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return { 
+      departments: [
+        'Computer Science & Engineering', 
+        'Electronics & Communication', 
+        'Mechanical Engineering', 
+        'Civil Engineering', 
+        'Information Technology'
+      ] 
+    };
+  },
+
+  getSemesters: async () => {
+    await new Promise(resolve => setTimeout(resolve, 200));
+    return { 
+      semesters: [
+        '1st Semester', '2nd Semester', '3rd Semester', '4th Semester',
+        '5th Semester', '6th Semester', '7th Semester', '8th Semester'
+      ] 
+    };
+  },
+
+  createCourse: async (courseData) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { 
+      message: 'Course created successfully',
+      course: {
+        id: Math.floor(Math.random() * 1000),
+        ...courseData
+      }
+    };
+  },
+
+  updateCourse: async (id, courseData) => {
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    return { message: 'Course updated successfully' };
+  },
+
+  deleteCourse: async (id) => {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    return { message: 'Course deleted successfully' };
+  },
+
+  getCOPOMapping: async (courseId) => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return {
+      mappings: [
+        { co_number: 1, po_number: 1, strength: 3 },
+        { co_number: 1, po_number: 2, strength: 2 },
+        { co_number: 1, po_number: 3, strength: 1 },
+        { co_number: 1, po_number: 4, strength: 0 },
+        { co_number: 1, po_number: 5, strength: 1 },
+        { co_number: 2, po_number: 1, strength: 2 },
+        { co_number: 2, po_number: 2, strength: 3 },
+        { co_number: 2, po_number: 3, strength: 2 },
+        { co_number: 2, po_number: 4, strength: 1 },
+        { co_number: 2, po_number: 5, strength: 0 }
+      ]
+    };
+  },
+
+  updateCOPOMapping: async (courseId, mappings) => {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    return { message: 'CO-PO mapping updated successfully' };
+  }
+};*/
 
 export default function CourseManagement() {
+  // State management
+  const [courses, setCourses] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [semesters, setSemesters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  
+  // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('All');
   const [selectedSemester, setSelectedSemester] = useState('All');
   const [selectedStatus, setSelectedStatus] = useState('All');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Selection and pagination states
   const [selectedCourses, setSelectedCourses] = useState([]);
-  const [sortBy, setSortBy] = useState('name');
-  const [sortOrder, setSortOrder] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCourses, setTotalCourses] = useState(0);
+  
+  // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [showCOPOModal, setShowCOPOModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedCourseForCOPO, setSelectedCourseForCOPO] = useState(null);
+  const [selectedCourseForEdit, setSelectedCourseForEdit] = useState(null);
+  const [copoMappings, setCopoMappings] = useState([]);
+  const [copoLoading, setCopoLoading] = useState(false);
 
-  // Sample course data
-  const courses = [
-    {
-      id: 'CSE101',
-      name: 'Data Structures and Algorithms',
-      code: 'CSE101',
-      department: 'Computer Science & Engineering',
-      semester: '3rd Semester',
-      credits: 4,
-      theory: 3,
-      practical: 2,
-      faculty: 'Dr. Rajesh Kumar',
-      students: 65,
-      status: 'Active',
-      syllabus: 'Updated',
-      lastModified: '2024-09-01',
-      courseOutcomes: [
-        'Analyze the performance of algorithms',
-        'Implement various data structures',
-        'Design efficient algorithms for problem solving',
-        'Apply appropriate data structures for specific problems'
-      ],
-      coPoMapping: {
-        'CO1': { PO1: 3, PO2: 2, PO3: 1, PO4: 0, PO5: 1 },
-        'CO2': { PO1: 2, PO2: 3, PO3: 2, PO4: 1, PO5: 0 },
-        'CO3': { PO1: 3, PO2: 3, PO3: 3, PO4: 2, PO5: 1 },
-        'CO4': { PO1: 2, PO2: 2, PO3: 3, PO4: 3, PO5: 2 }
-      }
-    },
-    {
-      id: 'ECE201',
-      name: 'Digital Signal Processing',
-      code: 'ECE201',
-      department: 'Electronics & Communication',
-      semester: '5th Semester',
-      credits: 4,
-      theory: 3,
-      practical: 2,
-      faculty: 'Dr. Priya Sharma',
-      students: 58,
-      status: 'Active',
-      syllabus: 'Updated',
-      lastModified: '2024-08-15',
-      courseOutcomes: [
-        'Understand discrete-time signals and systems',
-        'Analyze digital filters',
-        'Design FIR and IIR filters',
-        'Implement DSP algorithms'
-      ],
-      coPoMapping: {
-        'CO1': { PO1: 3, PO2: 2, PO3: 2, PO4: 1, PO5: 0 },
-        'CO2': { PO1: 2, PO2: 3, PO3: 3, PO4: 2, PO5: 1 },
-        'CO3': { PO1: 3, PO2: 3, PO3: 3, PO4: 3, PO5: 2 },
-        'CO4': { PO1: 2, PO2: 2, PO3: 3, PO4: 3, PO5: 3 }
-      }
-    },
-    {
-      id: 'ME301',
-      name: 'Thermodynamics',
-      code: 'ME301',
-      department: 'Mechanical Engineering',
-      semester: '4th Semester',
-      credits: 3,
-      theory: 3,
-      practical: 0,
-      faculty: 'Prof. Amit Patel',
-      students: 72,
-      status: 'Active',
-      syllabus: 'Review Pending',
-      lastModified: '2024-07-20',
-      courseOutcomes: [
-        'Apply the laws of thermodynamics',
-        'Analyze thermodynamic cycles',
-        'Calculate properties of substances',
-        'Design thermal systems'
-      ],
-      coPoMapping: {
-        'CO1': { PO1: 3, PO2: 3, PO3: 2, PO4: 1, PO5: 1 },
-        'CO2': { PO1: 2, PO2: 3, PO3: 3, PO4: 2, PO5: 1 },
-        'CO3': { PO1: 3, PO2: 2, PO3: 2, PO4: 3, PO5: 2 },
-        'CO4': { PO1: 2, PO2: 3, PO3: 3, PO4: 3, PO5: 3 }
-      }
-    },
-    {
-      id: 'CSE401',
-      name: 'Machine Learning',
-      code: 'CSE401',
-      department: 'Computer Science & Engineering',
-      semester: '7th Semester',
-      credits: 4,
-      theory: 3,
-      practical: 2,
-      faculty: 'Dr. Sneha Desai',
-      students: 45,
-      status: 'Active',
-      syllabus: 'Updated',
-      lastModified: '2024-09-05',
-      courseOutcomes: [
-        'Understand machine learning algorithms',
-        'Implement supervised learning methods',
-        'Apply unsupervised learning techniques',
-        'Evaluate model performance'
-      ],
-      coPoMapping: {
-        'CO1': { PO1: 3, PO2: 2, PO3: 2, PO4: 1, PO5: 1 },
-        'CO2': { PO1: 3, PO2: 3, PO3: 3, PO4: 2, PO5: 2 },
-        'CO3': { PO1: 2, PO2: 3, PO3: 3, PO4: 3, PO5: 2 },
-        'CO4': { PO1: 3, PO2: 3, PO3: 2, PO4: 3, PO5: 3 }
-      }
-    },
-    {
-      id: 'CE501',
-      name: 'Structural Analysis',
-      code: 'CE501',
-      department: 'Civil Engineering',
-      semester: '6th Semester',
-      credits: 4,
-      theory: 3,
-      practical: 2,
-      faculty: 'Prof. Arjun Singh',
-      students: 38,
-      status: 'Inactive',
-      syllabus: 'Outdated',
-      lastModified: '2024-06-10',
-      courseOutcomes: [
-        'Analyze statically determinate structures',
-        'Apply force and displacement methods',
-        'Design structural elements',
-        'Use analysis software tools'
-      ],
-      coPoMapping: {
-        'CO1': { PO1: 3, PO2: 3, PO3: 2, PO4: 2, PO5: 1 },
-        'CO2': { PO1: 2, PO2: 3, PO3: 3, PO4: 3, PO5: 2 },
-        'CO3': { PO1: 3, PO2: 2, PO3: 3, PO4: 3, PO5: 3 },
-        'CO4': { PO1: 2, PO2: 2, PO3: 2, PO4: 3, PO5: 3 }
-      }
-    }
-  ];
+  // Form states
+  const [courseForm, setCourseForm] = useState({
+    name: '',
+    code: '',
+    department: '',
+    semester: '',
+    credits: 3,
+    theory_hours: 3,
+    practical_hours: 0,
+    faculty: '',
+    description: '',
+    prerequisites: '',
+    status: 'Active',
+    course_outcomes: ['', '', '', '']
+  });
 
-  const departments = ['All', 'Computer Science & Engineering', 'Electronics & Communication', 'Mechanical Engineering', 'Civil Engineering', 'Information Technology'];
-  const semesters = ['All', '1st Semester', '2nd Semester', '3rd Semester', '4th Semester', '5th Semester', '6th Semester', '7th Semester', '8th Semester'];
+  const [notifications, setNotifications] = useState([]);
+
   const statuses = ['All', 'Active', 'Inactive', 'Under Review'];
-
-  // Program Outcomes
   const programOutcomes = [
     'PO1: Engineering Knowledge',
     'PO2: Problem Analysis',
@@ -190,46 +269,192 @@ export default function CourseManagement() {
     'PO5: Modern Tool Usage'
   ];
 
-  // Filter courses based on search and filters
-  const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.faculty.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === 'All' || course.department === selectedDepartment;
-    const matchesSemester = selectedSemester === 'All' || course.semester === selectedSemester;
-    const matchesStatus = selectedStatus === 'All' || course.status === selectedStatus;
-    
-    return matchesSearch && matchesDepartment && matchesSemester && matchesStatus;
-  });
+  // Load initial data
+  useEffect(() => {
+    loadInitialData();
+  }, []);
 
-  // Sort courses
-  const sortedCourses = [...filteredCourses].sort((a, b) => {
-    let aValue = a[sortBy];
-    let bValue = b[sortBy];
-    
-    if (typeof aValue === 'string') {
-      aValue = aValue.toLowerCase();
-      bValue = bValue.toLowerCase();
+  // Load courses when filters change
+  useEffect(() => {
+    loadCourses();
+  }, [currentPage, itemsPerPage, searchTerm, selectedDepartment, selectedSemester, selectedStatus]);
+
+  const loadInitialData = async () => {
+    try {
+      setLoading(true);
+      
+      // First try to initialize database if needed
+      try {
+        await courseService.initDatabase();
+      } catch (initError) {
+        console.log('Database might already be initialized or error occurred:', initError);
+      }
+      
+      const [coursesRes, deptsRes, semsRes] = await Promise.all([
+        courseService.getAllCourses({ page: 1, limit: itemsPerPage }),
+        courseService.getDepartments(),
+        courseService.getSemesters()
+      ]);
+      
+      setCourses(coursesRes.courses);
+      setTotalPages(coursesRes.pagination.totalPages);
+      setTotalCourses(coursesRes.pagination.totalCourses);
+      setDepartments(['All', ...deptsRes.departments]);
+      setSemesters(['All', ...semsRes.semesters]);
+    } catch (err) {
+      console.error('Error loading course data:', err);
+      setError('Failed to load course data. Please try again.');
+      addNotification('Failed to load course data. Please try again.', 'error');
+    } finally {
+      setLoading(false);
     }
-    
-    if (sortOrder === 'asc') {
-      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
-    } else {
-      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+  };
+
+  const loadCourses = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: searchTerm,
+        department: selectedDepartment !== 'All' ? selectedDepartment : '',
+        semester: selectedSemester !== 'All' ? selectedSemester : '',
+        status: selectedStatus !== 'All' ? selectedStatus : ''
+      };
+      
+      const response = await courseService.getAllCourses(params);
+      setCourses(response.courses || []);
+      setTotalPages(response.pagination?.totalPages || 1);
+      setTotalCourses(response.pagination?.totalCourses || 0);
+    } catch (err) {
+      console.error('Error loading courses:', err);
+      setError('Failed to load courses. Please try again.');
+      addNotification('Failed to load courses. Please try again.', 'error');
+      setCourses([]);
+      setTotalPages(1);
+      setTotalCourses(0);
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
-  // Pagination
-  const totalPages = Math.ceil(sortedCourses.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentCourses = sortedCourses.slice(startIndex, endIndex);
+  const addNotification = (message, type = 'info') => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 5000);
+  };
 
-  // Calculate summary statistics
-  const totalCourses = courses.length;
-  const activeCourses = courses.filter(c => c.status === 'Active').length;
-  const totalCredits = courses.reduce((sum, c) => sum + c.credits, 0);
-  const totalStudents = courses.reduce((sum, c) => sum + c.students, 0);
+  const removeNotification = (id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleCreateCourse = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await courseService.createCourse(courseForm);
+      setShowAddModal(false);
+      resetCourseForm();
+      addNotification('Course created successfully', 'success');
+      loadCourses();
+    } catch (err) {
+      console.error('Error creating course:', err);
+      addNotification(err.message || 'Failed to create course', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateCourse = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await courseService.updateCourse(selectedCourseForEdit.id, courseForm);
+      setShowEditModal(false);
+      setSelectedCourseForEdit(null);
+      resetCourseForm();
+      addNotification('Course updated successfully', 'success');
+      loadCourses();
+    } catch (err) {
+      console.error('Error updating course:', err);
+      addNotification(err.message || 'Failed to update course', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteCourse = async (courseId) => {
+    if (!window.confirm('Are you sure you want to delete this course?')) return;
+    
+    try {
+      setLoading(true);
+      await courseService.deleteCourse(courseId);
+      addNotification('Course deleted successfully', 'success');
+      loadCourses();
+    } catch (err) {
+      console.error('Error deleting course:', err);
+      addNotification(err.message || 'Failed to delete course', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetCourseForm = () => {
+    setCourseForm({
+      name: '',
+      code: '',
+      department: '',
+      semester: '',
+      credits: 3,
+      theory_hours: 3,
+      practical_hours: 0,
+      faculty: '',
+      description: '',
+      prerequisites: '',
+      status: 'Active',
+      course_outcomes: ['', '', '', '']
+    });
+  };
+
+  const openEditModal = (course) => {
+    setSelectedCourseForEdit(course);
+    setCourseForm({
+      name: course.name || '',
+      code: course.code || '',
+      department: course.department || '',
+      semester: course.semester || '',
+      credits: course.credits || 3,
+      theory_hours: course.theory_hours || 3,
+      practical_hours: course.practical_hours || 0,
+      faculty: course.faculty || '',
+      description: course.description || '',
+      prerequisites: course.prerequisites || '',
+      status: course.status || 'Active',
+      course_outcomes: course.courseOutcomes 
+        ? course.courseOutcomes.map(co => co.description) 
+        : ['', '', '', '']
+    });
+    setShowEditModal(true);
+  };
+
+  const openCOPOModal = async (course) => {
+    setSelectedCourseForCOPO(course);
+    setShowCOPOModal(true);
+    setCopoLoading(true);
+    
+    try {
+      const response = await courseService.getCOPOMapping(course.id);
+      setCopoMappings(response.mappings || []);
+    } catch (err) {
+      console.error('Error loading CO-PO mapping:', err);
+      addNotification('Failed to load CO-PO mapping', 'error');
+      setCopoMappings([]);
+    } finally {
+      setCopoLoading(false);
+    }
+  };
 
   const handleSelectCourse = (courseId) => {
     setSelectedCourses(prev => 
@@ -240,10 +465,10 @@ export default function CourseManagement() {
   };
 
   const handleSelectAll = () => {
-    if (selectedCourses.length === currentCourses.length) {
+    if (selectedCourses.length === courses.length) {
       setSelectedCourses([]);
     } else {
-      setSelectedCourses(currentCourses.map(c => c.id));
+      setSelectedCourses(courses.map(c => c.id));
     }
   };
 
@@ -265,11 +490,6 @@ export default function CourseManagement() {
     return colors[syllabus] || 'bg-gray-100 text-gray-800';
   };
 
-  const openCOPOModal = (course) => {
-    setSelectedCourseForCOPO(course);
-    setShowCOPOModal(true);
-  };
-
   const getStrengthColor = (value) => {
     if (value === 3) return 'bg-green-500';
     if (value === 2) return 'bg-yellow-500';
@@ -284,9 +504,63 @@ export default function CourseManagement() {
     return 'None';
   };
 
+  const getMappingMatrix = () => {
+    const matrix = {};
+    copoMappings.forEach(mapping => {
+      if (!matrix[mapping.co_number]) matrix[mapping.co_number] = {};
+      matrix[mapping.co_number][mapping.po_number] = mapping.strength;
+    });
+    return matrix;
+  };
+
+  // Calculate summary statistics
+  const activeCourses = courses.filter(c => c.status === 'Active').length;
+  const totalCredits = courses.reduce((sum, c) => sum + (c.credits || 0), 0);
+  const totalStudents = courses.reduce((sum, c) => sum + (c.enrolled_students || 0), 0);
+
+  if (error && !courses.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Courses</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button
+            onClick={loadInitialData}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Notifications */}
+        <div className="fixed top-4 right-4 z-50 space-y-2">
+          {notifications.map(notification => (
+            <div
+              key={notification.id}
+              className={`p-4 rounded-lg shadow-lg flex items-center justify-between min-w-64 ${
+                notification.type === 'success' ? 'bg-green-100 text-green-800' :
+                notification.type === 'error' ? 'bg-red-100 text-red-800' :
+                'bg-blue-100 text-blue-800'
+              }`}
+            >
+              <span className="text-sm font-medium">{notification.message}</span>
+              <button
+                onClick={() => removeNotification(notification.id)}
+                className="ml-2 text-current hover:text-opacity-75"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+
         {/* Header */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
@@ -394,13 +668,22 @@ export default function CourseManagement() {
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-600">{selectedCourses.length} selected</span>
                 <div className="flex gap-2">
-                  <button className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                  <button 
+                    onClick={() => {
+                      if (window.confirm(`Are you sure you want to delete ${selectedCourses.length} courses?`)) {
+                        Promise.all(selectedCourses.map(id => courseService.deleteCourse(id)))
+                          .then(() => {
+                            addNotification('Courses deleted successfully', 'success');
+                            setSelectedCourses([]);
+                            loadCourses();
+                          })
+                          .catch(() => addNotification('Failed to delete some courses', 'error'));
+                      }
+                    }}
+                    className="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2"
+                  >
                     <Trash2 className="w-4 h-4" />
                     Delete
-                  </button>
-                  <button className="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
-                    <Target className="w-4 h-4" />
-                    Bulk CO/PO Map
                   </button>
                 </div>
               </div>
@@ -469,6 +752,12 @@ export default function CourseManagement() {
 
         {/* Course Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+          {loading && (
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+              <Loader className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+          )}
+          
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50">
@@ -476,7 +765,7 @@ export default function CourseManagement() {
                   <th className="px-6 py-3 text-left">
                     <input
                       type="checkbox"
-                      checked={selectedCourses.length === currentCourses.length && currentCourses.length > 0}
+                      checked={selectedCourses.length === courses.length && courses.length > 0}
                       onChange={handleSelectAll}
                       className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
@@ -502,7 +791,7 @@ export default function CourseManagement() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {currentCourses.map((course) => (
+                {courses.map((course) => (
                   <tr key={course.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <input
@@ -522,7 +811,9 @@ export default function CourseManagement() {
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">{course.name}</div>
                           <div className="text-sm text-gray-500">{course.code}</div>
-                          <div className="text-xs text-gray-400">Modified: {new Date(course.lastModified).toLocaleDateString()}</div>
+                          <div className="text-xs text-gray-400">
+                            Modified: {new Date(course.updated_at).toLocaleDateString()}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -532,11 +823,13 @@ export default function CourseManagement() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">Credits: {course.credits}</div>
-                      <div className="text-sm text-gray-500">Theory: {course.theory}h | Lab: {course.practical}h</div>
+                      <div className="text-sm text-gray-500">
+                        Theory: {course.theory_hours}h | Lab: {course.practical_hours}h
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{course.faculty}</div>
-                      <div className="text-sm text-gray-500">Students: {course.students}</div>
+                      <div className="text-sm text-gray-500">Students: {course.enrolled_students}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="mb-1">
@@ -545,8 +838,8 @@ export default function CourseManagement() {
                         </span>
                       </div>
                       <div>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSyllabusBadge(course.syllabus)}`}>
-                          {course.syllabus}
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSyllabusBadge(course.syllabus_status)}`}>
+                          {course.syllabus_status}
                         </span>
                       </div>
                     </td>
@@ -555,7 +848,11 @@ export default function CourseManagement() {
                         <button className="text-blue-600 hover:text-blue-900" title="View Details">
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button className="text-gray-600 hover:text-gray-900" title="Edit">
+                        <button 
+                          onClick={() => openEditModal(course)}
+                          className="text-gray-600 hover:text-gray-900" 
+                          title="Edit"
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
@@ -568,11 +865,13 @@ export default function CourseManagement() {
                         <button className="text-purple-600 hover:text-purple-900" title="Syllabus">
                           <FileText className="w-4 h-4" />
                         </button>
-                        <div className="relative">
-                          <button className="text-gray-400 hover:text-gray-600" title="More Options">
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                        </div>
+                        <button 
+                          onClick={() => handleDeleteCourse(course.id)}
+                          className="text-red-600 hover:text-red-900" 
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -602,9 +901,9 @@ export default function CourseManagement() {
             <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm text-gray-700">
-                  Showing <span className="font-medium">{startIndex + 1}</span> to{' '}
-                  <span className="font-medium">{Math.min(endIndex, sortedCourses.length)}</span> of{' '}
-                  <span className="font-medium">{sortedCourses.length}</span> results
+                  Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{' '}
+                  <span className="font-medium">{Math.min(currentPage * itemsPerPage, totalCourses)}</span> of{' '}
+                  <span className="font-medium">{totalCourses}</span> results
                 </p>
               </div>
               <div>
@@ -671,103 +970,115 @@ export default function CourseManagement() {
                     onClick={() => setShowCOPOModal(false)}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
               </div>
               
               <div className="p-6">
-                {/* Course Outcomes */}
-                <div className="mb-6">
-                  <h4 className="text-md font-medium text-gray-900 mb-4">Course Outcomes (COs)</h4>
-                  <div className="space-y-2">
-                    {selectedCourseForCOPO.courseOutcomes.map((outcome, index) => (
-                      <div key={index} className="bg-blue-50 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-blue-900">CO{index + 1}</p>
-                        <p className="text-sm text-blue-800">{outcome}</p>
-                      </div>
-                    ))}
+                {copoLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader className="w-8 h-8 animate-spin text-blue-600" />
                   </div>
-                </div>
-
-                {/* Program Outcomes */}
-                <div className="mb-6">
-                  <h4 className="text-md font-medium text-gray-900 mb-4">Program Outcomes (POs)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {programOutcomes.map((po, index) => (
-                      <div key={index} className="bg-green-50 p-3 rounded-lg">
-                        <p className="text-sm font-medium text-green-900">{po}</p>
+                ) : (
+                  <>
+                    {/* Course Outcomes */}
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Course Outcomes (COs)</h4>
+                      <div className="space-y-2">
+                        {selectedCourseForCOPO.courseOutcomes ? (
+                          selectedCourseForCOPO.courseOutcomes.map((outcome, index) => (
+                            <div key={index} className="bg-blue-50 p-3 rounded-lg">
+                              <p className="text-sm font-medium text-blue-900">CO{outcome.outcome_number}</p>
+                              <p className="text-sm text-blue-800">{outcome.description}</p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-gray-500">No course outcomes defined</p>
+                        )}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                {/* CO/PO Mapping Matrix */}
-                <div className="mb-6">
-                  <h4 className="text-md font-medium text-gray-900 mb-4">CO/PO Mapping Matrix</h4>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full border border-gray-300">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-4 py-2 border border-gray-300 text-left text-xs font-medium text-gray-500 uppercase">
-                            Course Outcomes
-                          </th>
-                          {['PO1', 'PO2', 'PO3', 'PO4', 'PO5'].map(po => (
-                            <th key={po} className="px-4 py-2 border border-gray-300 text-center text-xs font-medium text-gray-500 uppercase">
-                              {po}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white">
-                        {Object.entries(selectedCourseForCOPO.coPoMapping).map(([co, mapping]) => (
-                          <tr key={co} className="hover:bg-gray-50">
-                            <td className="px-4 py-2 border border-gray-300 font-medium text-sm text-gray-900">
-                              {co}
-                            </td>
-                            {Object.entries(mapping).map(([po, value]) => (
-                              <td key={po} className="px-4 py-2 border border-gray-300 text-center">
-                                <div className="flex items-center justify-center">
-                                  <div
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${getStrengthColor(value)}`}
-                                    title={getStrengthText(value)}
-                                  >
-                                    {value}
-                                  </div>
-                                </div>
-                              </td>
-                            ))}
-                          </tr>
+                    {/* Program Outcomes */}
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Program Outcomes (POs)</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {programOutcomes.map((po, index) => (
+                          <div key={index} className="bg-green-50 p-3 rounded-lg">
+                            <p className="text-sm font-medium text-green-900">{po}</p>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                      </div>
+                    </div>
 
-                {/* Mapping Legend */}
-                <div className="mb-6">
-                  <h4 className="text-md font-medium text-gray-900 mb-4">Mapping Strength</h4>
-                  <div className="flex flex-wrap gap-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-green-500"></div>
-                      <span className="text-sm text-gray-700">3 - Strong correlation</span>
+                    {/* CO/PO Mapping Matrix */}
+                    {copoMappings.length > 0 && (
+                      <div className="mb-6">
+                        <h4 className="text-md font-medium text-gray-900 mb-4">CO/PO Mapping Matrix</h4>
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full border border-gray-300">
+                            <thead className="bg-gray-50">
+                              <tr>
+                                <th className="px-4 py-2 border border-gray-300 text-left text-xs font-medium text-gray-500 uppercase">
+                                  Course Outcomes
+                                </th>
+                                {['PO1', 'PO2', 'PO3', 'PO4', 'PO5'].map(po => (
+                                  <th key={po} className="px-4 py-2 border border-gray-300 text-center text-xs font-medium text-gray-500 uppercase">
+                                    {po}
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white">
+                              {Object.entries(getMappingMatrix()).map(([co, mapping]) => (
+                                <tr key={co} className="hover:bg-gray-50">
+                                  <td className="px-4 py-2 border border-gray-300 font-medium text-sm text-gray-900">
+                                    CO{co}
+                                  </td>
+                                  {[1, 2, 3, 4, 5].map(po => (
+                                    <td key={po} className="px-4 py-2 border border-gray-300 text-center">
+                                      <div className="flex items-center justify-center">
+                                        <div
+                                          className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${getStrengthColor(mapping[po] || 0)}`}
+                                          title={getStrengthText(mapping[po] || 0)}
+                                        >
+                                          {mapping[po] || 0}
+                                        </div>
+                                      </div>
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Mapping Legend */}
+                    <div className="mb-6">
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Mapping Strength</h4>
+                      <div className="flex flex-wrap gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-green-500"></div>
+                          <span className="text-sm text-gray-700">3 - Strong correlation</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-yellow-500"></div>
+                          <span className="text-sm text-gray-700">2 - Medium correlation</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-orange-500"></div>
+                          <span className="text-sm text-gray-700">1 - Weak correlation</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 rounded bg-gray-300"></div>
+                          <span className="text-sm text-gray-700">0 - No correlation</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-yellow-500"></div>
-                      <span className="text-sm text-gray-700">2 - Medium correlation</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-orange-500"></div>
-                      <span className="text-sm text-gray-700">1 - Weak correlation</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-4 h-4 rounded bg-gray-300"></div>
-                      <span className="text-sm text-gray-700">0 - No correlation</span>
-                    </div>
-                  </div>
-                </div>
+                  </>
+                )}
 
                 <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                   <button
@@ -788,26 +1099,31 @@ export default function CourseManagement() {
           </div>
         )}
 
-        {/* Add Course Modal */}
-        {showAddModal && (
+        {/* Add/Edit Course Modal */}
+        {(showAddModal || showEditModal) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-gray-900">Add New Course</h3>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {showEditModal ? 'Edit Course' : 'Add New Course'}
+                  </h3>
                   <button
-                    onClick={() => setShowAddModal(false)}
+                    onClick={() => {
+                      setShowAddModal(false);
+                      setShowEditModal(false);
+                      setSelectedCourseForEdit(null);
+                      resetCourseForm();
+                    }}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <X className="w-6 h-6" />
                   </button>
                 </div>
               </div>
               
               <div className="p-6">
-                <form className="space-y-6">
+                <form onSubmit={showEditModal ? handleUpdateCourse : handleCreateCourse} className="space-y-6">
                   {/* Basic Course Information */}
                   <div>
                     <h4 className="text-md font-medium text-gray-900 mb-4">Basic Course Information</h4>
@@ -816,57 +1132,71 @@ export default function CourseManagement() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Course Name *</label>
                         <input
                           type="text"
+                          value={courseForm.name}
+                          onChange={(e) => setCourseForm({...courseForm, name: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="Enter course name"
+                          required
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Course Code *</label>
                         <input
                           type="text"
+                          value={courseForm.code}
+                          onChange={(e) => setCourseForm({...courseForm, code: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="CSE101"
+                          required
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Department *</label>
-                        <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select 
+                          value={courseForm.department}
+                          onChange={(e) => setCourseForm({...courseForm, department: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        >
                           <option value="">Select Department</option>
-                          <option value="Computer Science & Engineering">Computer Science & Engineering</option>
-                          <option value="Electronics & Communication">Electronics & Communication</option>
-                          <option value="Mechanical Engineering">Mechanical Engineering</option>
-                          <option value="Civil Engineering">Civil Engineering</option>
-                          <option value="Information Technology">Information Technology</option>
+                          {departments.filter(d => d !== 'All').map(dept => (
+                            <option key={dept} value={dept}>{dept}</option>
+                          ))}
                         </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Semester *</label>
-                        <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select 
+                          value={courseForm.semester}
+                          onChange={(e) => setCourseForm({...courseForm, semester: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          required
+                        >
                           <option value="">Select Semester</option>
-                          <option value="1st Semester">1st Semester</option>
-                          <option value="2nd Semester">2nd Semester</option>
-                          <option value="3rd Semester">3rd Semester</option>
-                          <option value="4th Semester">4th Semester</option>
-                          <option value="5th Semester">5th Semester</option>
-                          <option value="6th Semester">6th Semester</option>
-                          <option value="7th Semester">7th Semester</option>
-                          <option value="8th Semester">8th Semester</option>
+                          {semesters.filter(s => s !== 'All').map(semester => (
+                            <option key={semester} value={semester}>{semester}</option>
+                          ))}
                         </select>
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Credits *</label>
                         <input
                           type="number"
+                          value={courseForm.credits}
+                          onChange={(e) => setCourseForm({...courseForm, credits: parseInt(e.target.value) || 3})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="4"
                           min="1"
                           max="6"
+                          required
                         />
                       </div>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Theory Hours</label>
                         <input
                           type="number"
+                          value={courseForm.theory_hours}
+                          onChange={(e) => setCourseForm({...courseForm, theory_hours: parseInt(e.target.value) || 0})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="3"
                           min="0"
@@ -877,6 +1207,8 @@ export default function CourseManagement() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Practical Hours</label>
                         <input
                           type="number"
+                          value={courseForm.practical_hours}
+                          onChange={(e) => setCourseForm({...courseForm, practical_hours: parseInt(e.target.value) || 0})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="2"
                           min="0"
@@ -887,18 +1219,44 @@ export default function CourseManagement() {
                         <label className="block text-sm font-medium text-gray-700 mb-2">Faculty Assigned</label>
                         <input
                           type="text"
+                          value={courseForm.faculty}
+                          onChange={(e) => setCourseForm({...courseForm, faculty: e.target.value})}
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           placeholder="Dr. Faculty Name"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select 
+                          value={courseForm.status}
+                          onChange={(e) => setCourseForm({...courseForm, status: e.target.value})}
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                          <option value="Under Review">Under Review</option>
+                        </select>
                       </div>
                     </div>
                     <div className="mt-4">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Course Description</label>
                       <textarea
                         rows={3}
+                        value={courseForm.description}
+                        onChange={(e) => setCourseForm({...courseForm, description: e.target.value})}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter course description"
                       ></textarea>
+                    </div>
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Prerequisites</label>
+                      <input
+                        type="text"
+                        value={courseForm.prerequisites}
+                        onChange={(e) => setCourseForm({...courseForm, prerequisites: e.target.value})}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Course codes separated by commas"
+                      />
                     </div>
                   </div>
 
@@ -906,47 +1264,45 @@ export default function CourseManagement() {
                   <div>
                     <h4 className="text-md font-medium text-gray-900 mb-4">Course Outcomes</h4>
                     <div className="space-y-3">
-                      {[1, 2, 3, 4].map(i => (
-                        <div key={i}>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">CO{i}</label>
+                      {courseForm.course_outcomes.map((outcome, index) => (
+                        <div key={index}>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">CO{index + 1}</label>
                           <textarea
                             rows={2}
+                            value={outcome}
+                            onChange={(e) => {
+                              const newOutcomes = [...courseForm.course_outcomes];
+                              newOutcomes[index] = e.target.value;
+                              setCourseForm({...courseForm, course_outcomes: newOutcomes});
+                            }}
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder={`Enter Course Outcome ${i}`}
+                            placeholder={`Enter Course Outcome ${index + 1}`}
                           ></textarea>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  {/* Prerequisites */}
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-4">Additional Information</h4>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Prerequisites</label>
-                        <input
-                          type="text"
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Course codes separated by commas"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                     <button
                       type="button"
-                      onClick={() => setShowAddModal(false)}
+                      onClick={() => {
+                        setShowAddModal(false);
+                        setShowEditModal(false);
+                        setSelectedCourseForEdit(null);
+                        resetCourseForm();
+                      }}
                       className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                      disabled={loading}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                      Add Course
+                      {loading && <Loader className="w-4 h-4 animate-spin" />}
+                      {showEditModal ? 'Update Course' : 'Add Course'}
                     </button>
                   </div>
                 </form>
